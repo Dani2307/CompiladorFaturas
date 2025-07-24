@@ -1,0 +1,14 @@
+# Instalação de bibliotecas
+pip install -r requirements.txt
+
+# Empacotamento
+pip install pyinstaller
+
+pyinstaller build.spec
+
+variavel de ambiente
+C:\poppler-24.08.0\Library\bin
+
+
+
+git remote add origin https://github.com/Dani2307/CompiladorFaturas.git
