@@ -10,10 +10,13 @@ import difflib
 import pytesseract
 from PyPDF2 import PdfReader, PdfWriter
 
-from config import SIMILARITY_CUTOFF
+from config import SIMILARITY_CUTOFF, TESSERACT_CMD
 from utils.pdf_utils import extrair_nome_cliente
 from utils.ocr_utils import carregar_imagem_boleto, extrair_nome_pagador
 from utils.zip_utils import extrair_arquivos_zip
+
+# Configura o Tesseract
+pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
 
 
 def processar_pdfs(
@@ -64,8 +67,12 @@ def processar_pdfs(
         cliente = extrair_nome_cliente(texto_fat)
 
         # c) OCR no boleto + extração de pagador
-        texto_bol = pytesseract.image_to_string(boleto_imgs[idx], lang='por')
-        pagador = extrair_nome_pagador(texto_bol)
+        try:
+            texto_bol = pytesseract.image_to_string(boleto_imgs[idx], lang='por')
+            pagador = extrair_nome_pagador(texto_bol)
+        except Exception as e:
+            # Fallback: usa o nome do cliente como pagador
+            pagador = cliente
 
         # d) Cria writer e adiciona páginas
         writer = PdfWriter()
