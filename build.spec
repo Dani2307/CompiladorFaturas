@@ -1,38 +1,38 @@
-# build.spec
-# -*- mode: python ; coding: utf-8 -*-
-
 import os
-import sys
+import glob
 from PyInstaller.utils.hooks import collect_submodules
 from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
 
 block_cipher = None
 
-# Caminho absoluto para a raiz do projeto (onde está o build.spec)
 project_root = os.path.abspath(os.getcwd())
 
+# Listando DLLs do Poppler
+poppler_dlls = [
+    (dll, 'vendor/vendor/poppler/bin') for dll in glob.glob(os.path.join(project_root, 'vendor', 'vendor', 'poppler', 'bin', '*.dll'))
+]
+# Listando DLLs do Tesseract
+tesseract_dlls = [
+    (dll, 'vendor/vendor/tesseract') for dll in glob.glob(os.path.join(project_root, 'vendor', 'vendor', 'tesseract', '*.dll'))
+]
+# Listando arquivos traineddata do Tesseract
+tessdata_files = [
+    (td, 'vendor/vendor/tesseract/tessdata') for td in glob.glob(os.path.join(project_root, 'vendor', 'vendor', 'tesseract', 'tessdata', '*.traineddata'))
+]
+
 a = Analysis(
-    ['main.py'],                     # seu entry point
-    pathex=[project_root],           # onde procurar o main.py
+    ['main.py'],
+    pathex=[project_root],
     binaries=[
-        # Poppler executáveis e DLLs
-        ('vendor/poppler/bin/pdftoppm.exe', 'vendor/poppler/bin'),
-        ('vendor/poppler/bin/pdftocairo.exe', 'vendor/poppler/bin'),
-        ('vendor/poppler/bin/*.dll',   'vendor/poppler/bin'),
-        # Tesseract executável e DLLs
-        ('vendor/tesseract/tesseract.exe', 'vendor/tesseract'),
-        ('vendor/tesseract/*.dll',       'vendor/tesseract'),
-    ],
+        (os.path.join(project_root, 'vendor', 'vendor', 'poppler', 'bin', 'pdftoppm.exe'), 'vendor/vendor/poppler/bin'),
+        (os.path.join(project_root, 'vendor', 'vendor', 'poppler', 'bin', 'pdftocairo.exe'), 'vendor/vendor/poppler/bin'),
+        (os.path.join(project_root, 'vendor', 'vendor', 'tesseract', 'tesseract.exe'), 'vendor/vendor/tesseract'),
+    ] + poppler_dlls + tesseract_dlls,
     datas=[
-        # Logo
-        ('resources/logo.png', 'resources'),
-        # Manual de Ajuda PDF
-        ('resources/Manual_Ajuda.pdf', 'resources'),
-        # Arquivos de idiomas do Tesseract
-        ('vendor/tesseract/tessdata/*.traineddata', 'vendor/tesseract/tessdata'),
-        # Icone da aplicação
-        ('resources/icon.ico', 'resources'),
-    ],
+        (os.path.join(project_root, 'vendor', 'vendor', 'poppler', 'bin'), 'vendor/vendor/poppler/bin'),
+        (os.path.join(project_root, 'vendor', 'vendor', 'tesseract'), 'vendor/vendor/tesseract'),
+    ] + tessdata_files,
+
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
@@ -45,15 +45,15 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    [],                    # não adiciona binários extras aqui
+    [],
     exclude_binaries=True,
     name='CompiladorFaturas',
-    icon=os.path.join('resources', 'icon.ico'),  # ícone do executável
+    icon=None,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,         # janela GUI sem console
+    console=False,
 )
 
 coll = COLLECT(
